@@ -1,0 +1,10 @@
+# Proprietary EcmSpy software - not redistributable, see README.md
+installer/*.exe
+extracted/
+
+# Runtime data
+data/*
+!data/.gitkeep
+
+# OS cruft
+.DS_Store

@@ -1,0 +1,35 @@
+FROM debian:bookworm-slim AS extractor
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        innoextract \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY installer/EcmSpy_Mono_2.0-Setup.exe /tmp/setup.exe
+
+RUN innoextract -e -m --output-dir /extracted /tmp/setup.exe
+
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DISPLAY=:99
+ENV HOME=/root
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        mono-complete \
+        gtk-sharp2 \
+        libgtk2.0-cil \
+        libglade2.0-cil \
+        xvfb \
+        procps \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=extractor /extracted/app/ /root/ecmspy/
+
+RUN mkdir -p /root/ecmspy/applog
+
+WORKDIR /root/ecmspy
+
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x800x24 -nolisten tcp & sleep 2 && mono ecmspy_mono.exe"]

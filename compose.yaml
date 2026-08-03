@@ -1,0 +1,24 @@
+services:
+  ecmspy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: ecmspy
+
+    ports:
+      - "6080:6080"
+
+    environment:
+      SERIAL_HOST: host.docker.internal
+      SERIAL_PORT: "2000"
+      NOVNC_PORT: "6080"
+
+    volumes:
+      - ./data:/home/ecmspy/data
+      - ecmspy-logs:/home/ecmspy/ecmspy/applog
+
+    restart: "no"
+
+volumes:
+  ecmspy-logs:
