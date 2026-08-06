@@ -9,6 +9,123 @@ This repo contains only the *packaging*: a Dockerfile, a compose file, and a
 startup script. It does **not** contain EcmSpy itself — see
 [Legal notice](#legal-notice) below.
 
+## Quick start (no coding experience needed)
+
+This section is for people who just want to plug in their bike and open
+EcmSpy — it doesn't assume you know what Docker or a terminal is. If you get
+stuck, the more technical [Setup](#setup) section below has the same steps
+in short form.
+
+**Before you start**, the computer with the bike's USB diagnostic cable
+plugged into it needs to be sharing that cable over the network — step 3
+below covers this for a Mac. If someone else already set this up for you
+(e.g. via `ser2net` on a separate box), you can skip straight to step 4.
+
+### 1. Install Docker Desktop
+
+Docker Desktop is the one program that runs everything else for you.
+
+1. Go to <https://www.docker.com/products/docker-desktop/> and download
+   Docker Desktop for your computer (Mac or Windows).
+2. Install it like any other application, then open it once. You should see
+   a small whale icon appear — leave Docker Desktop running in the
+   background whenever you use EcmSpy.
+
+### 2. Download this project
+
+1. Near the top of this page, click the green **Code** button, then
+   **Download ZIP**.
+2. Find the downloaded file (usually in your Downloads folder) and unzip it
+   by double-clicking it. You'll end up with a folder named
+   `ecmspy-container`.
+
+### 3. Bridge the bike's USB cable to the network (Mac)
+
+Skip this step if the cable is already being shared for you elsewhere.
+
+1. Plug the bike's USB diagnostic cable into your Mac.
+2. Open Terminal and run this to find the cable's device name:
+
+   ```sh
+   ls /dev/cu.usbserial-*
+   ```
+
+   You should see something like `/dev/cu.usbserial-AR0JV3ZE`. If you see
+   nothing, unplug and replug the cable and try again.
+3. If you don't already have `socat` installed, install
+   [Homebrew](https://brew.sh) first, then run:
+
+   ```sh
+   brew install socat
+   ```
+4. Start the bridge, using the device name from step 2:
+
+   ```sh
+   socat -d -d TCP-LISTEN:2000,reuseaddr,fork,bind=127.0.0.1 \
+     FILE:/dev/cu.usbserial-AR0JV3ZE,raw,echo=0
+   ```
+
+   Leave this Terminal window open and running the whole time you're using
+   EcmSpy — closing it disconnects the bike. (`bind=127.0.0.1` keeps the
+   connection local to this Mac only, which is all the container needs.)
+
+### 4. Add your EcmSpy installer
+
+1. Get your own legally purchased copy of `EcmSpy_Mono_2.0-Setup.exe` (see
+   [Legal notice](#legal-notice) — this project doesn't include it).
+2. Move that file into the `installer` folder inside `ecmspy-container`, so
+   the path looks like `ecmspy-container/installer/EcmSpy_Mono_2.0-Setup.exe`.
+
+### 5. Start EcmSpy
+
+1. Open a **new** terminal window (leave the `socat` one from step 3
+   running):
+   - **Mac:** press **⌘ + Space**, type `Terminal`, press Return.
+   - **Windows:** click Start, type `PowerShell`, press Enter.
+2. Type `cd ` (with a trailing space), then drag the `ecmspy-container`
+   folder from Finder/File Explorer into the terminal window and drop it —
+   this fills in the folder's path for you. Press Return.
+3. Type this and press Return:
+
+   ```sh
+   docker compose up --build
+   ```
+4. Wait. The first run downloads and builds everything, which can take
+   several minutes — you'll see a lot of text scroll by, that's normal.
+   It's ready when the scrolling slows down and you stop seeing new
+   "building" messages.
+
+### 6. Open EcmSpy in your browser
+
+Go to:
+
+```
+http://localhost:6080/vnc.html
+```
+
+Click **Connect** if prompted. You should see the EcmSpy application
+running, as if it were installed directly on your computer.
+
+### Stopping and restarting
+
+- To stop: go back to the terminal window running `docker compose` and
+  press **Ctrl + C**. You can also stop the `socat` window if you're done
+  with the bike.
+- To use it again later: redo steps 3 (`socat`) and 5 (`docker compose up
+  --build`) — steps 1, 2, and 4 only need to be done once.
+
+### If something goes wrong
+
+- **"docker: command not found"** — Docker Desktop isn't installed, or
+  isn't finished starting up. Open the Docker Desktop app and wait for the
+  whale icon to say it's running.
+- **The browser page won't load** — make sure the terminal from step 5 is
+  still open and running; closing it stops EcmSpy.
+- **EcmSpy can't see the bike** — make sure the `socat` window from step 3
+  is still open and running, and that the cable is plugged in. See
+  [Configuration](#configuration) below for how to point this project at a
+  different address, or ask whoever set up the cable bridge.
+
 ## How it works
 
 ```
@@ -65,6 +182,21 @@ for Mono" installer and complying with its license.
   host, shared via [`ser2net`](https://github.com/cminyard/ser2net) or
   similar). By default the container looks for this at
   `host.docker.internal:2000`.
+
+  On macOS, `socat` is a lighter-weight alternative to `ser2net` for
+  sharing a single locally-attached USB adapter:
+
+  ```sh
+  socat -d -d TCP-LISTEN:2000,reuseaddr,fork,bind=127.0.0.1 \
+    FILE:/dev/cu.usbserial-XXXXXXXX,raw,echo=0
+  ```
+
+  Replace `/dev/cu.usbserial-XXXXXXXX` with your adapter's actual device
+  path (`ls /dev/cu.usbserial-*` to find it). `bind=127.0.0.1` restricts the
+  bridge to the local machine — Docker Desktop's `host.docker.internal`
+  reaches localhost-bound host ports, so the container can still connect.
+  `fork` keeps `socat` running and accepting reconnects across container
+  restarts.
 
 ## Setup
 
