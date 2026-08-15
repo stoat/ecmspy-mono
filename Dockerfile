@@ -7,7 +7,8 @@ RUN apt-get update \
 
 COPY installer/EcmSpy_Mono_2.0-Setup.exe /tmp/setup.exe
 
-RUN innoextract -e -m --output-dir /extracted /tmp/setup.exe
+RUN innoextract -e -m --output-dir /extracted /tmp/setup.exe \
+    && sed -i 's/xs:sring/xs:string/' /extracted/app/files.xml
 
 FROM debian:bookworm-slim
 
@@ -29,6 +30,7 @@ RUN apt-get update \
         websockify \
         socat \
         procps \
+        gosu \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd \
@@ -44,13 +46,14 @@ RUN useradd \
 COPY --from=extractor --chown=ecmspy:ecmspy /extracted/app/ /home/ecmspy/ecmspy/
 
 COPY --chown=ecmspy:ecmspy start-ecmspy.sh /usr/local/bin/start-ecmspy
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
-RUN chmod 755 /usr/local/bin/start-ecmspy
-
-USER ecmspy
+RUN chmod 755 /usr/local/bin/start-ecmspy /usr/local/bin/entrypoint.sh
 
 WORKDIR /home/ecmspy/ecmspy
 
 EXPOSE 6080
 
-CMD ["/usr/local/bin/start-ecmspy"]
+# Starts as root (see entrypoint.sh) to set up a /dev symlink, then drops
+# to the ecmspy user via gosu for the rest of the startup sequence.
+CMD ["/usr/local/bin/entrypoint.sh"]

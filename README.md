@@ -128,24 +128,34 @@ running, as if it were installed directly on your computer.
 
 ## How it works
 
-```
-┌─────────────────────────── container ───────────────────────────┐
-│                                                                    │
-│  Xvfb (virtual display) ── Fluxbox (window manager)                │
-│         │                                                          │
-│         └── ecmspy_mono.exe (via mono)                             │
-│                                                                    │
-│  x11vnc ── websockify/noVNC ── :6080 (browser access)               │
-│                                                                    │
-│  socat: PTY ⇄ TCP  ──────────────────────────────────────┐         │
-│         (exposed to EcmSpy as a local /dev/ttyUSB0-style  │        │
-│          serial device)                                   │        │
-└─────────────────────────────────────────────────────────┼────────┘
-                                                             │
-                                              SERIAL_HOST:SERIAL_PORT
-                                        (a TCP-exposed serial connection
-                                         to the bike's diagnostic cable,
-                                         e.g. via ser2net on the host)
+```mermaid
+flowchart TB
+    subgraph host["Host machine"]
+        bike["Bike ECM<br/>(USB diagnostic cable)"]
+        socatHost["socat / ser2net<br/>TCP-LISTEN:SERIAL_PORT"]
+        browser["Browser<br/>localhost:NOVNC_PORT/vnc.html"]
+        bike -->|USB| socatHost
+    end
+
+    subgraph container["Docker container (ecmspy)"]
+        socatC["socat<br/>PTY ⇄ TCP client"]
+        pty["/tmp/ttyUSB0<br/>(virtual serial device)"]
+        mono["mono<br/>ecmspy_mono.exe"]
+        xvfb["Xvfb :1<br/>(virtual display)"]
+        fluxbox["Fluxbox<br/>(window manager)"]
+        x11vnc["x11vnc<br/>:5900"]
+        novnc["websockify / noVNC<br/>:NOVNC_PORT"]
+
+        socatC --> pty
+        pty --> mono
+        mono -->|renders on| xvfb
+        fluxbox --- xvfb
+        x11vnc -->|captures| xvfb
+        novnc -->|proxies| x11vnc
+    end
+
+    socatHost <-->|"TCP SERIAL_HOST:SERIAL_PORT<br/>(default host.docker.internal:2000)"| socatC
+    novnc <-->|WebSocket| browser
 ```
 
 At build time, the image extracts EcmSpy from its official Inno Setup

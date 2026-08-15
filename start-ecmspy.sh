@@ -28,6 +28,11 @@ mkdir -p \
 
 echo "Starting virtual display on ${DISPLAY}..."
 
+# A container restart (vs. recreate) reuses the writable layer, so a lock
+# file from a prior run's Xvfb can be left behind even though nothing is
+# actually using the display anymore.
+rm -f "/tmp/.X${DISPLAY#:}-lock" "/tmp/.X11-unix/X${DISPLAY#:}"
+
 Xvfb "$DISPLAY" \
     -screen 0 1280x800x24 \
     -nolisten tcp \
