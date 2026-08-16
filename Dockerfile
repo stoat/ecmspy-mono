@@ -16,10 +16,33 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:1
 ENV HOME=/home/ecmspy
 
+# Debian's own mono-complete (6.8.0.105) predates a Mono fix for Linux
+# kernels >=5.13, which return ENOTTY (not EINVAL) when a program tries to
+# set DTR/RTS on a pseudo-terminal; unpatched Mono treats that as fatal,
+# crashing EcmSpy's SerialPort.Open() against the bridged PTY. The official
+# Mono project apt repo ships 6.12.0.200, which includes the fix
+# (https://github.com/mono/mono/pull/21204). Installing the mono-complete
+# metapackage as-is from this repo fails outright (its monodoc-http /
+# mono-xsp4 postinst scripts error out in a minimal container); installing
+# specific packages instead resolves a working set (gtk-sharp2 still pulls
+# in mono-devel/monodoc/mono-xsp4 transitively, but via an install order
+# that configures cleanly here).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        gnupg \
         ca-certificates \
-        mono-complete \
+    && gpg --homedir /tmp --no-default-keyring \
+        --keyring gnupg-ring:/usr/share/keyrings/mono-official-archive-keyring.gpg \
+        --keyserver hkp://keyserver.ubuntu.com:80 \
+        --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF \
+    && chmod 644 /usr/share/keyrings/mono-official-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/debian stable-buster main" \
+        > /etc/apt/sources.list.d/mono-official-stable.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        mono-runtime \
+        libmono-system-data4.0-cil \
+        libmono-system-xml4.0-cil \
         gtk-sharp2 \
         libgtk2.0-cil \
         libglade2.0-cil \

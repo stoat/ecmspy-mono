@@ -18,8 +18,9 @@ in short form.
 
 **Before you start**, the computer with the bike's USB diagnostic cable
 plugged into it needs to be sharing that cable over the network — step 3
-below covers this for a Mac. If someone else already set this up for you
-(e.g. via `ser2net` on a separate box), you can skip straight to step 4.
+below covers this the same way on Mac, Windows, and Linux. If someone else
+already set this up for you (e.g. via `ser2net` on a separate box), you can
+skip straight to step 4.
 
 ### 1. Install Docker Desktop
 
@@ -39,35 +40,47 @@ Docker Desktop is the one program that runs everything else for you.
    by double-clicking it. You'll end up with a folder named
    `ecmspy-container`.
 
-### 3. Bridge the bike's USB cable to the network (Mac)
+### 3. Bridge the bike's USB cable to the network
 
-Skip this step if the cable is already being shared for you elsewhere.
+Skip this step if the cable is already being shared for you elsewhere. This
+step is identical on Mac, Windows, and Linux.
 
-1. Plug the bike's USB diagnostic cable into your Mac.
-2. Open Terminal and run this to find the cable's device name:
-
-   ```sh
-   ls /dev/cu.usbserial-*
-   ```
-
-   You should see something like `/dev/cu.usbserial-AR0JV3ZE`. If you see
-   nothing, unplug and replug the cable and try again.
-3. If you don't already have `socat` installed, install
-   [Homebrew](https://brew.sh) first, then run:
-
-   ```sh
-   brew install socat
-   ```
-4. Start the bridge, using the device name from step 2:
+1. Plug the bike's USB diagnostic cable into your computer.
+2. Make sure you have Python 3 installed:
+   - **Mac:** open Terminal and run `python3 --version`. If that fails,
+     install [Homebrew](https://brew.sh) first, then run `brew install
+     python`.
+   - **Windows:** open PowerShell and run `python --version`. If that
+     fails, install Python from <https://www.python.org/downloads/> (tick
+     "Add python.exe to PATH" during install).
+3. In that same terminal, `cd` into the `ecmspy-container` folder (drag the
+   folder from Finder/File Explorer into the terminal window to fill in the
+   path), then install the one dependency this needs (first time only):
 
    ```sh
-   socat -d -d TCP-LISTEN:2000,reuseaddr,fork,bind=127.0.0.1 \
-     FILE:/dev/cu.usbserial-AR0JV3ZE,raw,echo=0
+   pip install -r requirements.txt
+   ```
+4. Start the bridge:
+
+   ```sh
+   python serial-bridge.py
    ```
 
-   Leave this Terminal window open and running the whole time you're using
-   EcmSpy — closing it disconnects the bike. (`bind=127.0.0.1` keeps the
-   connection local to this Mac only, which is all the container needs.)
+   It finds the cable automatically:
+
+   ```
+   Found: /dev/cu.usbserial-AR0JV3ZE (FTDI)
+   Bridging to TCP :2000 ... (Ctrl+C to stop)
+   ```
+
+   (On Windows this looks the same, just with a `COM` port name.) If it
+   can't find exactly one adapter, it'll either tell you to plug the cable
+   in or ask you to pick from a list.
+
+   Leave this terminal window open and running the whole time you're using
+   EcmSpy — closing it (or pressing Ctrl+C) disconnects the bike. This only
+   binds to your own computer (`127.0.0.1`), which is all the container
+   needs.
 
 ### 4. Add your EcmSpy installer
 
@@ -78,8 +91,8 @@ Skip this step if the cable is already being shared for you elsewhere.
 
 ### 5. Start EcmSpy
 
-1. Open a **new** terminal window (leave the `socat` one from step 3
-   running):
+1. Open a **new** terminal window (leave the `serial-bridge.py` one from
+   step 3 running):
    - **Mac:** press **⌘ + Space**, type `Terminal`, press Return.
    - **Windows:** click Start, type `PowerShell`, press Enter.
 2. Type `cd ` (with a trailing space), then drag the `ecmspy-container`
@@ -109,10 +122,10 @@ running, as if it were installed directly on your computer.
 ### Stopping and restarting
 
 - To stop: go back to the terminal window running `docker compose` and
-  press **Ctrl + C**. You can also stop the `socat` window if you're done
-  with the bike.
-- To use it again later: redo steps 3 (`socat`) and 5 (`docker compose up
-  --build`) — steps 1, 2, and 4 only need to be done once.
+  press **Ctrl + C**. You can also stop the `serial-bridge.py` window
+  (Ctrl + C there too) if you're done with the bike.
+- To use it again later: redo steps 3 (`serial-bridge.py`) and 5 (`docker
+  compose up --build`) — steps 1, 2, and 4 only need to be done once.
 
 ### If something goes wrong
 
@@ -121,10 +134,13 @@ running, as if it were installed directly on your computer.
   whale icon to say it's running.
 - **The browser page won't load** — make sure the terminal from step 5 is
   still open and running; closing it stops EcmSpy.
-- **EcmSpy can't see the bike** — make sure the `socat` window from step 3
-  is still open and running, and that the cable is plugged in. See
-  [Configuration](#configuration) below for how to point this project at a
-  different address, or ask whoever set up the cable bridge.
+- **EcmSpy can't see the bike** — make sure the `serial-bridge.py` window
+  from step 3 is still open and running, and that the cable is plugged in.
+  See [Configuration](#configuration) below for how to point this project
+  at a different address, or ask whoever set up the cable bridge.
+- **EcmSpy connects but the ECM never responds** — Factory Race ECMs use a
+  different baud rate than stock ECMs. Stop `serial-bridge.py` and restart
+  it with `python serial-bridge.py --baud 19200`.
 
 ## How it works
 
@@ -132,7 +148,7 @@ running, as if it were installed directly on your computer.
 flowchart TB
     subgraph host["Host machine"]
         bike["Bike ECM<br/>(USB diagnostic cable)"]
-        socatHost["socat / ser2net<br/>TCP-LISTEN:SERIAL_PORT"]
+        socatHost["serial-bridge.py<br/>TCP-LISTEN:SERIAL_PORT"]
         browser["Browser<br/>localhost:NOVNC_PORT/vnc.html"]
         bike -->|USB| socatHost
     end
@@ -187,37 +203,37 @@ for Mono" installer and complying with its license.
 
 - Docker and Docker Compose
 - Your own legally obtained `EcmSpy_Mono_2.0-Setup.exe` installer
+- Python 3, to run the serial bridge (see below)
 - A way to expose the diagnostic cable's serial port over TCP, reachable
-  from the container (e.g. a USB-to-serial adapter plugged into the Docker
-  host, shared via [`ser2net`](https://github.com/cminyard/ser2net) or
-  similar). By default the container looks for this at
+  from the container. By default the container looks for this at
   `host.docker.internal:2000`.
-
-  On macOS, `socat` is a lighter-weight alternative to `ser2net` for
-  sharing a single locally-attached USB adapter:
-
-  ```sh
-  socat -d -d TCP-LISTEN:2000,reuseaddr,fork,bind=127.0.0.1 \
-    FILE:/dev/cu.usbserial-XXXXXXXX,raw,echo=0
-  ```
-
-  Replace `/dev/cu.usbserial-XXXXXXXX` with your adapter's actual device
-  path (`ls /dev/cu.usbserial-*` to find it). `bind=127.0.0.1` restricts the
-  bridge to the local machine — Docker Desktop's `host.docker.internal`
-  reaches localhost-bound host ports, so the container can still connect.
-  `fork` keeps `socat` running and accepting reconnects across container
-  restarts.
 
 ## Setup
 
 1. Place your installer at `installer/EcmSpy_Mono_2.0-Setup.exe` (this path
    is gitignored and stays local to your machine).
-2. Build and start the container:
+2. Bridge the cable — same on Mac, Windows, and Linux:
+
+   ```sh
+   pip install -r requirements.txt
+   python serial-bridge.py
+   ```
+
+   This auto-detects the USB-serial adapter and listens on TCP `:2000`
+   (`127.0.0.1` only). Pass `--baud 19200` for Factory Race ECMs (stock
+   ECMs use the default, 9600). Leave it running; use `--port`/`--tcp-port`
+   to override auto-detection or the listening port, and see
+   `python serial-bridge.py --help` for all options.
+
+   Advanced/headless setups can use [`ser2net`](https://github.com/cminyard/ser2net)
+   or a raw `socat TCP-LISTEN:2000 FILE:/dev/ttyUSB0,raw` instead, as long
+   as something is listening on `SERIAL_HOST:SERIAL_PORT`.
+3. Build and start the container:
 
    ```sh
    docker compose up --build
    ```
-3. Open EcmSpy in your browser:
+4. Open EcmSpy in your browser:
 
    ```
    http://localhost:6080/vnc.html
