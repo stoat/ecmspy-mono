@@ -57,14 +57,17 @@ step is identical on Mac, Windows, and Linux.
    folder from Finder/File Explorer into the terminal window to fill in the
    path), then install the one dependency this needs (first time only):
 
-   ```sh
-   pip install -r requirements.txt
-   ```
+   - **Mac/Linux:** `python3 -m pip install -r requirements.txt`
+   - **Windows:** `python -m pip install -r requirements.txt`
+
+   (Using `python3 -m pip`/`python -m pip` here instead of a bare `pip`/
+   `pip3` command sidesteps a common gotcha where `pip` isn't on your PATH
+   even though Python itself is — this way always uses the pip that comes
+   with the Python you just installed.)
 4. Start the bridge:
 
-   ```sh
-   python serial-bridge.py
-   ```
+   - **Mac/Linux:** `python3 serial-bridge.py`
+   - **Windows:** `python serial-bridge.py`
 
    It finds the cable automatically:
 
@@ -140,7 +143,8 @@ running, as if it were installed directly on your computer.
   at a different address, or ask whoever set up the cable bridge.
 - **EcmSpy connects but the ECM never responds** — Factory Race ECMs use a
   different baud rate than stock ECMs. Stop `serial-bridge.py` and restart
-  it with `python serial-bridge.py --baud 19200`.
+  it with `--baud 19200` added (`python3 serial-bridge.py --baud 19200` on
+  Mac/Linux, `python serial-bridge.py --baud 19200` on Windows).
 
 ## How it works
 
@@ -212,18 +216,19 @@ for Mono" installer and complying with its license.
 
 1. Place your installer at `installer/EcmSpy_Mono_2.0-Setup.exe` (this path
    is gitignored and stays local to your machine).
-2. Bridge the cable — same on Mac, Windows, and Linux:
+2. Bridge the cable — same on Mac, Windows, and Linux (use `python3` on
+   Mac/Linux, `python` on Windows):
 
    ```sh
-   pip install -r requirements.txt
-   python serial-bridge.py
+   python3 -m pip install -r requirements.txt
+   python3 serial-bridge.py
    ```
 
    This auto-detects the USB-serial adapter and listens on TCP `:2000`
    (`127.0.0.1` only). Pass `--baud 19200` for Factory Race ECMs (stock
    ECMs use the default, 9600). Leave it running; use `--port`/`--tcp-port`
    to override auto-detection or the listening port, and see
-   `python serial-bridge.py --help` for all options.
+   `python3 serial-bridge.py --help` for all options.
 
    Advanced/headless setups can use [`ser2net`](https://github.com/cminyard/ser2net)
    or a raw `socat TCP-LISTEN:2000 FILE:/dev/ttyUSB0,raw` instead, as long

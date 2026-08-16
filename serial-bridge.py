@@ -18,9 +18,13 @@ try:
     import serial
     import serial.tools.list_ports
 except ImportError:
+    import os
     sys.exit(
         "The 'pyserial' package is required.\n"
-        "Install it with: pip install -r requirements.txt"
+        "Install it by running this exact command:\n\n"
+        f"    {sys.executable} -m pip install -r requirements.txt\n\n"
+        "(run it from inside the ecmspy-container folder, so it can find "
+        f"requirements.txt in {os.getcwd()})"
     )
 
 
