@@ -38,7 +38,9 @@ Docker Desktop is the one program that runs everything else for you.
    **Download ZIP**.
 2. Find the downloaded file (usually in your Downloads folder) and unzip it
    by double-clicking it. You'll end up with a folder named
-   `ecmspy-container`.
+   `ecmspy-mono-main` (GitHub names it after the repository, `ecmspy-mono`,
+   and branch, `main` — the rest of this guide just calls it "the project
+   folder"; feel free to rename it to whatever you like).
 
 ### 3. Bridge the bike's USB cable to the network
 
@@ -51,10 +53,15 @@ step is identical on Mac, Windows, and Linux.
      install [Homebrew](https://brew.sh) first, then run `brew install
      python`.
    - **Windows:** open PowerShell and run `python --version`. If that
-     fails, install Python from <https://www.python.org/downloads/> (tick
-     "Add python.exe to PATH" during install).
-3. In that same terminal, `cd` into the `ecmspy-container` folder (drag the
-   folder from Finder/File Explorer into the terminal window to fill in the
+     fails, run:
+
+     ```powershell
+     winget install --id Python.Python.3.14
+     ```
+
+     then close and reopen PowerShell so it picks up the new install.
+3. In that same terminal, `cd` into the project folder (drag the folder
+   from Finder/File Explorer into the terminal window to fill in the
    path), then install the one dependency this needs (first time only):
 
    - **Mac/Linux:** `python3 -m pip install -r requirements.txt`
@@ -89,8 +96,9 @@ step is identical on Mac, Windows, and Linux.
 
 1. Get your own legally purchased copy of `EcmSpy_Mono_2.0-Setup.exe` (see
    [Legal notice](#legal-notice) — this project doesn't include it).
-2. Move that file into the `installer` folder inside `ecmspy-container`, so
-   the path looks like `ecmspy-container/installer/EcmSpy_Mono_2.0-Setup.exe`.
+2. Move that file into the `installer` folder inside the project folder
+   (already there, just empty), so the path looks like
+   `installer/EcmSpy_Mono_2.0-Setup.exe`.
 
 ### 5. Start EcmSpy
 
@@ -98,9 +106,9 @@ step is identical on Mac, Windows, and Linux.
    step 3 running):
    - **Mac:** press **⌘ + Space**, type `Terminal`, press Return.
    - **Windows:** click Start, type `PowerShell`, press Enter.
-2. Type `cd ` (with a trailing space), then drag the `ecmspy-container`
-   folder from Finder/File Explorer into the terminal window and drop it —
-   this fills in the folder's path for you. Press Return.
+2. Type `cd ` (with a trailing space), then drag the project folder from
+   Finder/File Explorer into the terminal window and drop it — this fills
+   in the folder's path for you. Press Return.
 3. Type this and press Return:
 
    ```sh
