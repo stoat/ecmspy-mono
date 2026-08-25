@@ -1,5 +1,16 @@
 # ecmspy-container
 
+JFDI
+1. Install Docker Desktop
+2. Install Python programming language
+3. Download this repository
+4. Download ECM Spy & copy to the installer directory of this repository
+5. Plug the ECM cable into the computer
+6. Open a terminal window, change directory to where this repostitory is and type python -m pip install -r requirements.txt (this makes the USB cable available to the ECMSpy
+7. Open a terminal window, change directory to where this repostitory is and type "docker compose up --build" - this builds ECMSpy inside a container - which should allow it to run on modern computers safely
+8. Open a browser window / tab and navigate to http://localhost:6080/vnc.html
+
+## What this is for:-
 A Docker wrapper for running **EcmSpy for Mono** — a Windows/Mono diagnostic
 tool for Buell motorcycle ECMs (engine control modules) — headlessly in a
 container, with the GUI exposed in a browser over noVNC and the serial
