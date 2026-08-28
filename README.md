@@ -11,6 +11,16 @@ JFDI
 8. Open a browser window / tab and navigate to http://localhost:6080/vnc.html
 
 ## What this is for:-
+
+The ECMSpy application was written over 20 years ago for a Windows XP operating system.
+Microsoft have long ceased supporting Windows XP, and so how can we run ECMSpy on modern hardware?
+Ideally we would want to be platform agnostic for use. In other words it would be nice if we can run this on Windows 11 or Mac OSX or Linux.
+One size fits all.
+
+Fortunately a solution is available using docker technology, which encapsulates a set of software in a 'container'. This technology is used extensively in software development.
+We also need a program that will run on all those operating systems in order to provide a unified interface for device handling - in this case a USB cable. I've selected the Python language as a)I'm using it day-to-day and b) it is available for Windows, OSX and Linux.
+
+This repository of code provides:-
 A Docker wrapper for running **EcmSpy for Mono** — a Windows/Mono diagnostic
 tool for Buell motorcycle ECMs (engine control modules) — headlessly in a
 container, with the GUI exposed in a browser over noVNC and the serial
