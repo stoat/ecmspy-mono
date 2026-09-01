@@ -1,4 +1,5 @@
 # ecmspy-container
+Test adjustment for PR constraint.
 
 JFDI
 1. Install Docker Desktop
