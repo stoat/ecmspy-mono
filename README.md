@@ -1,5 +1,7 @@
 # ecmspy-container
 
+New stuff in README
+
 JFDI
 1. Install Docker Desktop
 2. Install Python programming language
