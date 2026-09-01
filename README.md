@@ -1,6 +1,8 @@
 # ecmspy-container
 Test adjustment for PR constraint.
 
+New stuff in README
+
 JFDI
 1. Install Docker Desktop
 2. Install Python programming language
